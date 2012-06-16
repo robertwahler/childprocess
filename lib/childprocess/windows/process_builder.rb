@@ -42,10 +42,13 @@ module ChildProcess
       def create_command_pointers
         string = @args.map { |arg| quote_if_necessary(arg.to_s) }.join ' '
 
-        # .bat file handling, must be run under cmd.exe
+        # Non-executable files, including batch (*.bat) files, must be run under cmd.exe
+        #
+        # This allows launching any type of file that cmd.exe knows how to handle, i.e. PDF, PNG, JPG, etc
         if string && @app_name.nil?
-          batch_file = string.match(/'?"?.*\.bat\s?/) ? true : false
-          if batch_file
+          # any exe file followed by a word boundary
+          non_executable = string.match(/^.+\.exe\b/) ? false : true
+          if non_executable
             @app_name = quote_if_necessary(File.join(ENV["WINDIR"], "system32", "cmd.exe"))
             string = "/c #{string}"
           end
